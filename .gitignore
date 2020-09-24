@@ -1,0 +1,4 @@
+/vendor/
+/storage/
+/config/SlackClients.php
+/config/InvisionCommunityLogin.php
