@@ -7,13 +7,14 @@ namespace Slack;
 
 class Client
 {
-    protected $url = "https://hooks.slack.com/services/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";
+    protected $url = NULL;
     protected $username;
     protected $emoji;
 
-    public function __construct($username="TU", $emoji=":tu:")
+    public function __construct(string $url, $username="Invision Community", $emoji=":ips:")
     {
         ini_set("default_socket_timeout", 5);
+        $this->setUrl($url);
         $this->setUsername($username);
         $this->setEmoji($emoji);
     }
