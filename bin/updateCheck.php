@@ -51,7 +51,7 @@ foreach( $versions as $k => $v )
 
         $attachments = [];
         
-        if($v->changes)
+        if(isset($v->changes) && $v->changes)
         {
             foreach($v->changes as $_k => $change)
             {
@@ -76,9 +76,8 @@ foreach( $versions as $k => $v )
             $message .= ( $v->security ) ? ' and is a security release!' : '.';
             $message .= " View <https://invisioncommunity.com/release-notes/|Release Notes>";
             $message .= " _({$v->longversion})_";
-            
-            $slackClients['ipscontributors']->post( '@tsp', $message, $attachments );
-            //$slackClients['ipscontributors']->post( '#updates', $message, $attachments );
+
+            $slackClients['ipscontributors']->post( '#updates', $message, $attachments );
         }
 
         $newVersions->$k = $v;
