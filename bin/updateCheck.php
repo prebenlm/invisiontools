@@ -44,47 +44,44 @@ foreach( $versions as $k => $v )
 	$current = $currentVersions->$k;
 	if( $v->released )
 	{
-		if( $v->released > $check_time)
-		{
-            if($current->longversion == $v->longversion)
-            {
-                continue;
-            }
+        if($current->longversion == $v->longversion)
+        {
+            continue;
+        }
 
-            $attachments = [];
-            
-            if($v->changes)
+        $attachments = [];
+        
+        if($v->changes)
+        {
+            foreach($v->changes as $_k => $change)
             {
-                foreach($v->changes as $_k => $change)
+                if ($change == $v->version)
                 {
-                    if ($change == $v->version)
-                    {
-                        continue;
-                    }
-                    $attach = [
-                        'fallback' => "[$_k]: {$change}",
-                        'text' => "*{$_k}:* {$change}",
-                        'mrkdwn_in' => ["text"]
-                    ];
-                    $attachments[] = $attach;
+                    continue;
                 }
+                $attach = [
+                    'fallback' => "[$_k]: {$change}",
+                    'text' => "*{$_k}:* {$change}",
+                    'mrkdwn_in' => ["text"]
+                ];
+                $attachments[] = $attach;
             }
+        }
 
 
-            if( $posted != $v->longversion )
-            {
-                $posted = $v->longversion;
-                $message  = "Version {$v->version}" . ( ( $k != 'dev' ) ? '' : " (Beta)" ) . " was just released";
-                $message .= ( $v->security ) ? ' and is a security release!' : '.';
-                $message .= " View <https://invisioncommunity.com/release-notes/|Release Notes>";
-                $message .= " _({$v->longversion})_";
-                
-                $slackClients['ipscontributors']->post( '@tsp', $message, $attachments );
-                //$slackClients['ipscontributors']->post( '#updates', $message, $attachments );
-            }
+        if( $posted != $v->longversion )
+        {
+            $posted = $v->longversion;
+            $message  = "Version {$v->version}" . ( ( $k != 'dev' ) ? '' : " (Beta)" ) . " was just released";
+            $message .= ( $v->security ) ? ' and is a security release!' : '.';
+            $message .= " View <https://invisioncommunity.com/release-notes/|Release Notes>";
+            $message .= " _({$v->longversion})_";
+            
+            $slackClients['ipscontributors']->post( '@tsp', $message, $attachments );
+            //$slackClients['ipscontributors']->post( '#updates', $message, $attachments );
+        }
 
-            $newVersions->$k = $v;
-		}
+        $newVersions->$k = $v;
 	}
 }
 
