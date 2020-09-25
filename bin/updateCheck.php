@@ -74,7 +74,8 @@ foreach( $versions as $k => $v )
             $posted = $v->longversion;
             $message  = "Version {$v->version}" . ( ( $k != 'dev' ) ? '' : " (Beta)" ) . " was just released";
             $message .= ( $v->security ) ? ' and is a security release!' : '.';
-            $message .= " View <https://invisioncommunity.com/release-notes/|Release Notes>";
+            $message .= " View <https://invisioncommunity.com/release-notes/|release notes>";
+            $message .= "/Download <https://remoteservices.invisionpower.com/devtools/{$v->longversion}|dev tools>";
             $message .= " _({$v->longversion})_";
 
             $slackClients['ipscontributors']->post( '#updates', $message, $attachments );
