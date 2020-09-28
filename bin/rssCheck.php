@@ -19,15 +19,6 @@ $feeds = [
         'fallback' => "«<#LINK#|#TITLE#>» was released in the Marketplace.",
         'pretext' => ''
     ],
-    /*'news' => [
-        'url' => 'https://invisioncommunity.com/news/?rss=1',
-        'username' => 'News',
-        'logo' => 'ipslogo',
-        'footer' => '<#FEED_LINK#|IPS News>',
-        'channels' => ['#ipstalk', '#ipsfeed'],
-        'fallback' => 'IPS posted in their blog: <#LINK#|#TITLE#>',
-        'pretext' => ''
-    ],*/
     'devposts' => [
         'url' => 'https://invisioncommunity.com/discover/66.xml/?member=135437&key=46f7039380c265f48833958eb3f3e3b1',
         'username' => 'Employee',
@@ -38,6 +29,12 @@ $feeds = [
         'pretext' => ''
     ]
 ];
+$previously = [];
+$previousFile = __DIR__ . '/../storage/feeds.json';
+if (file_exists($previousFile))
+{
+    $previously = json_decode( file_get_contents($previousFile) );
+}
 
 foreach( $feeds as $feed_key => $feed )
 {
@@ -53,28 +50,13 @@ foreach( $feeds as $feed_key => $feed )
     
     if ( strpos( $http_response_header[0], '200 OK' ) !== FALSE and $response )
     {
-		$file = __DIR__ . '/../storage/ips_rss_' . (!$is_cron ? 'test_' : '') . $feed_key . '.log';
-    	
+    	$previous = $previously->$feed_key;
     	$xml = simplexml_load_string($response);
     	$slack->setUsername($feed['username']);
     	$slack->setEmoji(":{$feed['logo']}:");
-        $prev_time = strtotime('19th July 2019');
-        $guids = [];
+        $prev_time = $previous->timestamp ?? strtotime('1th July 2020');
+        $guids = $previous->guids ?? [];
         $guids_new = [];
-    	
-    	if ( file_exists($file) )
-    	{   
-            $text_to_parse = trim(file_get_contents($file));
-            if ( is_numeric($text_to_parse) )
-            {
-                $prev_time = intval($text_to_parse);
-            }
-            else
-            {
-                $guids = explode(',', $text_to_parse);
-                $prev_time = array_shift($guids);
-            }
-        }
         
         $next_time = $prev_time;
         $items = [];
@@ -126,12 +108,12 @@ foreach( $feeds as $feed_key => $feed )
             $get_breadcrumb = false;
             
             if ( $feed_key == 'marketplace' ) {
-                $http = new \Http();
-                $page = $http->get($item['link']);
+                $http = new \GuzzleHttp\Client();
+                $page = $http->request('GET', $item['link']);
                 
-                if ( $page['response'] and $page['status'] == 200 )
+                if ( $page->getStatusCode() == 200 AND $page->getBody() )
                 {
-                    \phpQuery::newDocument($page['response']);
+                    \phpQuery::newDocument($page->getBody());
                     
                     /* Retrieve author name, link and image */
                     $authorElement = pq('#ipsLayout_mainArea > div > div.ipsColumns.ipsColumns_collapsePhone.ipsClearfix > div > div.ipsBox_alt > div > div > p > a');
@@ -208,15 +190,13 @@ foreach( $feeds as $feed_key => $feed )
             }
             else if ( $feed_key == 'devposts' )
             {
-                $http = new \Http();
+                $http = new GuzzleHttp\Client(['headers' => $invisionLogins['community']]);
                 
                 /* Log me in please */
-                $headers = $invisionLogins['community'];
-                $http->setHeaders($headers);
-                $page = $http->get($item['link']);
-                if ( $page['response'] and $page['status'] == 200 )
+                $page = $http->request('GET', $item['link']);
+                if ( $page->getStatusCode() == 200 AND $page->getBody() )
                 {
-                    \phpQuery::newDocument($page['response']);
+                    \phpQuery::newDocument($page->getBody());
                     preg_match('#comment=(\d+)#', $item['link'], $matches);
                     
                     $commentId = $matches[1] ? $matches[1] : 0;
@@ -301,16 +281,12 @@ foreach( $feeds as $feed_key => $feed )
             $authors[$attach['author_name']] = $attach['author_name'];
             $next_time = ($item['unixdate'] > $next_time) ? $item['unixdate'] : $next_time;
     	}
-    	
-    	if ( $feed_key == 'marketplace' )
-    	{
-        	$write_to_file = implode(',', array_merge([$next_time], $guids_new));
-        	file_put_contents($file, $write_to_file);
-    	}
-    	else
-    	{
-        	file_put_contents($file, $next_time);
-    	}
+        
+        $previously->$feed_key = (object) [
+            'timestamp' => $next_time, 
+            'guids' => $guids_new
+        ];
+        file_put_contents($previousFile, json_encode( $previously, JSON_PRETTY_PRINT ));
     	
         if ( count($attachments) )
         {   
