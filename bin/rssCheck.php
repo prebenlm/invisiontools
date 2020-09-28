@@ -1,6 +1,4 @@
 <?php
-error_reporting(E_ALL & ~E_DEPRECATED);
-
 use PHPHtmlParser\Dom;
 $is_cron = (!getenv('CRON_MODE')) ? false : true;
 
