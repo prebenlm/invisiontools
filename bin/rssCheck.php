@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL & ~E_DEPRECATED);
+
 use PHPHtmlParser\Dom;
 $is_cron = (!getenv('CRON_MODE')) ? false : true;
 
@@ -29,7 +31,7 @@ $feeds = [
         'pretext' => ''
     ]
 ];
-$previously = [];
+$previously = new \StdClass;
 $previousFile = __DIR__ . '/../storage/feeds.json';
 if (file_exists($previousFile))
 {
@@ -38,6 +40,7 @@ if (file_exists($previousFile))
 
 foreach( $feeds as $feed_key => $feed )
 {
+    $previously->$feed_key = $previously->$feed_key ?? new \StdClass();
     $url = $feed['url'];
     $response = file_get_contents( $url );
     
@@ -50,10 +53,10 @@ foreach( $feeds as $feed_key => $feed )
     
     if ( strpos( $http_response_header[0], '200 OK' ) !== FALSE and $response )
     {
-    	$previous = $previously->$feed_key;
+        $previous = $previously->$feed_key;
     	$xml = simplexml_load_string($response);
     	$slack->setUsername($feed['username']);
-    	$slack->setEmoji(":{$feed['logo']}:");
+        $slack->setEmoji(":{$feed['logo']}:");
         $prev_time = $previous->timestamp ?? strtotime('1th July 2020');
         $guids = $previous->guids ?? [];
         $guids_new = [];
@@ -109,9 +112,14 @@ foreach( $feeds as $feed_key => $feed )
             
             if ( $feed_key == 'marketplace' ) {
                 $http = new \GuzzleHttp\Client();
-                $page = $http->request('GET', $item['link']);
+                $page = FALSE;
+                try
+                {
+                    $page = $http->request('GET', $item['link']);
+                } 
+                catch (\GuzzleHttp\Exception\RequestException $e){}
                 
-                if ( $page->getStatusCode() == 200 AND $page->getBody() )
+                if ( $page AND $page->getStatusCode() == 200 AND $page->getBody() )
                 {
                     \phpQuery::newDocument($page->getBody());
                     
@@ -191,10 +199,15 @@ foreach( $feeds as $feed_key => $feed )
             else if ( $feed_key == 'devposts' )
             {
                 $http = new GuzzleHttp\Client(['headers' => $invisionLogins['community']]);
+                $page = FALSE;
                 
-                /* Log me in please */
-                $page = $http->request('GET', $item['link']);
-                if ( $page->getStatusCode() == 200 AND $page->getBody() )
+                try
+                {
+                    $page = $http->request('GET', $item['link']);
+                }
+                catch (\GuzzleHttp\Exception\RequestException $e){}
+
+                if ( $page AND $page->getStatusCode() == 200 AND $page->getBody() )
                 {
                     \phpQuery::newDocument($page->getBody());
                     preg_match('#comment=(\d+)#', $item['link'], $matches);
@@ -278,18 +291,20 @@ foreach( $feeds as $feed_key => $feed )
             }
             
             $attachments[] = $attach;
-            $authors[$attach['author_name']] = $attach['author_name'];
+            if ( isset( $attach['author_name'] ) )
+            {
+                $authors[$attach['author_name']] = $attach['author_name'];
+            }
             $next_time = ($item['unixdate'] > $next_time) ? $item['unixdate'] : $next_time;
     	}
-        
-        $previously->$feed_key = (object) [
-            'timestamp' => $next_time, 
-            'guids' => $guids_new
-        ];
-        file_put_contents($previousFile, json_encode( $previously, JSON_PRETTY_PRINT ));
     	
         if ( count($attachments) )
-        {   
+        {
+            $next = $previously;
+            $next->$feed_key->timestamp = $next_time;
+            $next->$feed_key->guids = $guids_new;
+            file_put_contents($previousFile, json_encode( $next, JSON_PRETTY_PRINT ));
+
             if ( count($authors) == 1 and isset($attachments[0]['author_name']) )
             {
                 $slack->setUsername($attachments[0]['author_name']);
@@ -300,8 +315,6 @@ foreach( $feeds as $feed_key => $feed )
                     $slack->post( $channel, $feed['pretext'], $attachments );
                 }
             } else {
-                //print_r($attachments);
-                //echo "Found " . count($attachments) . " attachments.\n";
                 $slack->post( '@tsp', $feed['pretext'], $attachments );
             }
         }
