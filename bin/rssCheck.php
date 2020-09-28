@@ -314,7 +314,7 @@ foreach( $feeds as $feed_key => $feed )
 
 function getAverageColor($sourceURL)
 {
-	if (strpos($sourceUrl, 'https') === 0)
+	if (strpos($sourceURL, 'https') === 0)
 	{
 	    $image = imagecreatefromstring(file_get_contents($sourceURL));
 	    if ( $image )
