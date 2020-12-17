@@ -40,19 +40,23 @@ foreach( $feeds as $feed_key => $feed )
 {
     $previously->$feed_key = $previously->$feed_key ?? new \StdClass();
     $url = $feed['url'];
-    $response = file_get_contents( $url );
-    
-    if ( strpos( $http_response_header[0], '200 OK' ) === FALSE or !$response )
+    $getter = new \GuzzleHttp\Client();
+
+    $response = FALSE;
+    try
     {
-    	/* Retry */
-    	sleep( 120 );
-    	$response = file_get_contents( $url );
+        $response = $getter->request( 'GET', $url );
     }
-    
-    if ( strpos( $http_response_header[0], '200 OK' ) !== FALSE and $response )
+    catch (\GuzzleHttp\Exception\RequestException $e)
+    {
+        echo "Request failed ({$response->getStatusCode()}), exception {$e->getMessage()}";
+        continue;
+    }
+
+    if ( $response AND $response->getStatusCode() == 200 AND $response->getBody() )
     {
         $previous = $previously->$feed_key;
-    	$xml = simplexml_load_string($response);
+        $xml = simplexml_load_string($response->getBody());
     	$slack->setUsername($feed['username']);
         $slack->setEmoji(":{$feed['logo']}:");
         $prev_time = $previous->timestamp ?? strtotime('1th July 2020');
