@@ -126,7 +126,7 @@ foreach( $feeds as $feed_key => $feed )
                     \phpQuery::newDocument($page->getBody());
                     
                     /* Retrieve author name, link and image */
-                    $authorElement = pq('#ipsLayout_mainArea > div > div.ipsColumns.ipsColumns_collapsePhone.ipsClearfix > div > div.ipsBox_alt > div > div > p > a');
+                    $authorElement = pq('div.ipsPageHeader > div.ipsPageHeader__meta > div.ipsFlex-flex\:11 > div.ipsPhotoPanel > div > p > a');
                     
                     if ( $author = $authorElement->html() )
                     {
@@ -136,7 +136,7 @@ foreach( $feeds as $feed_key => $feed )
                         {
                             $attach['author_link'] = $link;
                         }
-                        $imageElement = pq('#ipsLayout_mainArea > div > div.ipsColumns.ipsColumns_collapsePhone.ipsClearfix > div > div.ipsBox_alt > div > a > img');
+                        $imageElement = pq('div.ipsPageHeader > div.ipsPageHeader__meta > div.ipsFlex-flex\:11 > div.ipsPhotoPanel > a > img');
                         
                         if ( $image = $imageElement->attr('src') )
                         {
