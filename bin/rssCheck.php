@@ -224,7 +224,7 @@ foreach( $feeds as $feed_key => $feed )
                         if ( !$authorElement->html() )
                         {
                             /* It's different for news items */
-                            $authorElement = pq("#comment-{$commentId}_wrap > div.ipsComment_header > div > h3 > strong > a");
+                            $authorElement = pq("#comment-{$commentId}_wrap > div.ipsComment_header > div.ipsPhotoPanel > div > h3 > strong > a");
                         }
                         
                         if ( $author = $authorElement->html() )
@@ -236,12 +236,12 @@ foreach( $feeds as $feed_key => $feed )
                                 $attach['author_link'] = $link;
                             }
                             
-                            $imageElement = pq("#elComment_{$commentId} > aside > ul > li.cAuthorPane_photo > a > img");
+                            $imageElement = pq("#elComment_{$commentId} > aside > ul > li.cAuthorPane_photo > div.cAuthorPane_photoWrap > a > img");
                             
                             if ( !$imageElement->attr('src') )
                             {
                                 /* It's different for news items */ 
-                                $imageElement = pq("#comment-{$commentId}_wrap > div.ipsComment_header > a > img");
+                                $imageElement = pq("#comment-{$commentId}_wrap > div.ipsComment_header > div.ipsPhotoPanel > a > img");
                             }
                             
                             if ( $image = $imageElement->attr('src') )
