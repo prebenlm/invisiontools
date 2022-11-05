@@ -9,11 +9,16 @@
         }
     },
 
-    "repositories": [],
+    "repositories": [
+   	{
+            "type": "vcs",
+            "url": "https://github.com/electrolinux/phpquery"
+        }
+    ],
 
     "require": {
 		"php": ">=7.0",
         "guzzlehttp/guzzle": "^7.0",
-        "electrolinux/phpquery": "^0.9.6"
+        "electrolinux/phpquery": "dev-master"
     }
 }

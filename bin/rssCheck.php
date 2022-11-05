@@ -335,6 +335,11 @@ function getAverageColor($sourceURL)
 	    if ( $image )
 	    {
 	        $scaled = imagescale($image, 1, 1, IMG_BICUBIC); 
+		if ( $scaled === FALSE )
+		{
+			// no average for us
+			$scaled = $image;
+		}
 	        $index = imagecolorat($scaled, 0, 0);
 	        $rgb = imagecolorsforindex($scaled, $index); 
 	        $red = round(round(($rgb['red'] / 0x33)) * 0x33); 
