@@ -40,7 +40,7 @@ foreach( $feeds as $feed_key => $feed )
 {
     $previously->$feed_key = $previously->$feed_key ?? new \StdClass();
     $url = $feed['url'];
-    $getter = new \GuzzleHttp\Client();
+    $getter = new \GuzzleHttp\Client(['headers' => $invisionLogins['community']]);
 
     $response = FALSE;
     try
@@ -49,7 +49,7 @@ foreach( $feeds as $feed_key => $feed )
     }
     catch (\GuzzleHttp\Exception\RequestException $e)
     {
-        echo "Request failed ({$response->getStatusCode()}), exception {$e->getMessage()}";
+        echo "Request failed, exception {$e->getMessage()}";
         continue;
     }
 
@@ -219,12 +219,12 @@ foreach( $feeds as $feed_key => $feed )
                     if ($commentId)
                     {
                         /* Retrieve author name, link and image */
-                        $authorElement = pq("#elComment_{$commentId} > aside > h3 > strong > a");
+                        $authorElement = pq("#elComment_{$commentId} > aside h3 > a");
                         
                         if ( !$authorElement->html() )
                         {
                             /* It's different for news items */
-                            $authorElement = pq("#comment-{$commentId}_wrap > div.ipsComment_header > div.ipsPhotoPanel > div > h3 > strong > a");
+                            $authorElement = pq("#comment-{$commentId}_wrap > header > div.ipsEntry__header-align > div > div.ipsPhotoPanel__text > div.ipsEntry__username > h3 > a");
                         }
                         
                         if ( $author = $authorElement->html() )
@@ -236,12 +236,12 @@ foreach( $feeds as $feed_key => $feed )
                                 $attach['author_link'] = $link;
                             }
                             
-                            $imageElement = pq("#elComment_{$commentId} > aside > ul > li.cAuthorPane_photo > div.cAuthorPane_photoWrap > a > img");
-                            
+                            $imageElement = pq("#elComment_{$commentId} > aside > div > div.ipsPhotoPanel img");
+
                             if ( !$imageElement->attr('src') )
                             {
                                 /* It's different for news items */ 
-                                $imageElement = pq("#comment-{$commentId}_wrap > div.ipsComment_header > div.ipsPhotoPanel > a > img");
+                                $imageElement = pq("#comment-{$commentId}_wrap > header > div.ipsEntry__header-align > div > div.ipsAvatarStack > a > img");
                             }
                             
                             if ( $image = $imageElement->attr('src') )
@@ -258,7 +258,7 @@ foreach( $feeds as $feed_key => $feed )
                     }
                     
                     /* Retrieve breadcrumb information */
-                    $breadcrumbs = pq('#ipsLayout_contentWrapper > nav.ipsBreadcrumb.ipsBreadcrumb_top.ipsFaded_withHover > ul:nth-child(2) li');
+                    $breadcrumbs = pq('#ipsLayout__main > div > div > div.ipsHeaderExtra.ipsResponsive_header--desktop > div.ipsHeaderExtra__start > div > nav > ol li');
                     
                     if ( !$breadcrumbs->html() )
                     {
