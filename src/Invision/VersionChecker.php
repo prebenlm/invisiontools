@@ -6,9 +6,13 @@ class VersionChecker
 	private $development = false;
 	private $response = null;
 	private $versionInformation = null;
+	private $isV5 = false;
 	
-	public function __construct(int $version=null, bool $isDev=false)
+	public function __construct(int $version=null, bool $isDev=false, bool $isV5=false)
 	{
+		if ($isV5) {
+			$this->setIsV5($isV5);
+		}
 		if ($version) {
 			$this->setVersion($version);
 		}
@@ -20,6 +24,11 @@ class VersionChecker
 	public function setVersion(int $version)
 	{
 		$this->version = $version;
+	}
+
+	public function setIsV5(bool $isV5)
+	{
+		$this->isV5 = $isV5;
 	}
 	
 	public function isDevelopment(bool $development)
@@ -38,7 +47,7 @@ class VersionChecker
 	
 	public function request()
 	{
-		$client = new \GuzzleHttp\Client(['base_uri' => 'https://remoteservices.invisionpower.com/updateCheck/']);
+		$client = new \GuzzleHttp\Client(['base_uri' => 'https://remoteservices.invisionpower.com/updateCheck' . ( $this->isV5 ? '5' : '' ) . '/' ]);
 		$params = [];
 		if ($this->version) {
 			$params['version'] = $this->version;
