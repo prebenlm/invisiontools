@@ -79,7 +79,7 @@ foreach([4, 5] as $majorVersion)
                 $message  = "Version {$v->version}" . ( ( $k != 'dev' ) ? '' : " (Beta)" ) . " was just released";
                 $message .= ( $v->security ) ? ' and is a security release!' : '.';
                 $message .= " View <https://invisioncommunity.com/release-notes" . ( $majorVersion === 5 ? '-v5' : '' ) . "/|release notes>";
-                $message .= "/Download <https://remoteservices.invisionpower.com/devtools/{$v->longversion}|dev tools>";
+                $message .= "/Download <https://remoteservices.invisionpower.com/devtools" . ( $majorVersion === 5 ? '5' : '' ) . "/{$v->longversion}|dev tools>";
                 $message .= " _({$v->longversion})_";
 
                 $slackClients['ipscontributors']->post( '#updates', $message, $attachments );
